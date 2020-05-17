@@ -1,12 +1,9 @@
-package com.tinkoff.tinkoffProject;
-
+package com.tinkoff.tinkoffProject.service;
 
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
 import ru.tinkoff.invest.openapi.OpenApi;
 import ru.tinkoff.invest.openapi.models.market.Instrument;
 import ru.tinkoff.invest.openapi.models.market.InstrumentsList;
@@ -16,10 +13,7 @@ import ru.tinkoff.invest.openapi.models.portfolio.InstrumentType;
 import ru.tinkoff.invest.openapi.models.portfolio.Portfolio;
 import ru.tinkoff.invest.openapi.okhttp.OkHttpOpenApiFactory;
 
-import javax.annotation.PostConstruct;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.nio.charset.StandardCharsets;
@@ -28,37 +22,14 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@RestController
-@Slf4j
+@Service
 @NoArgsConstructor
-public class TestLoginController {
-    @Value("${app.tinkoff.key}")
-    private String key;
-
-
-    private OkHttpOpenApiFactory openApiFactory;
-
-    private String brokerId;
-
-    @PostConstruct
-    public void init() throws ExecutionException, InterruptedException {
-        this.openApiFactory = new OkHttpOpenApiFactory(key, Logger.getLogger(TestLoginController.class.getName()));
-    }
-
-    @SneakyThrows
-    @GetMapping("/login")
-    public String login() {
-        final OpenApi api = openApiFactory.createOpenApiClient(Executors.newSingleThreadExecutor());
-        return api.getUserContext().getAccounts().get().accounts.iterator().next().toString();
-
-    }
-
-    @SneakyThrows
-    @GetMapping("/sendOrders")
-    public StringBuffer sendOrders() {
+@Slf4j
+public class OrderService {
+    @NotNull
+    public StringBuffer createOrders(final OkHttpOpenApiFactory openApiFactory) throws IOException, InterruptedException, ExecutionException {
         final List<String> tickers = Files.readAllLines(Paths.get("src/main/resources/tickers.txt"), StandardCharsets.UTF_8);
         final OpenApi api = openApiFactory.createOpenApiClient(Executors.newSingleThreadExecutor());
         final InstrumentsList instrumentsList = api.getMarketContext().getMarketStocks().get();
@@ -88,5 +59,9 @@ public class TestLoginController {
             stringBuffer.append("created order for " + instrument.toString() + " at current price of " + currentOrders.toString() + "\n");
         }
         return stringBuffer;
+    }
+
+    public String findFigiByTicker(final OpenApi api, final String brokerId, final String ticker, final List<Instrument> instruments) {
+        return instruments.stream().filter(x -> x.type.equals(ru.tinkoff.invest.openapi.models.market.InstrumentType.Stock)).filter(x -> x.ticker.equals(ticker)).findFirst().get().figi;
     }
 }
