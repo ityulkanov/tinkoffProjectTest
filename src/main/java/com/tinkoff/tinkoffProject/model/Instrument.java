@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,7 +24,6 @@ public class Instrument {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
-
     @NotNull
     private String figi;
     @NotNull
@@ -40,8 +40,11 @@ public class Instrument {
     @NotNull
     private String type;
 
+    private LocalDateTime dateCreate;
+
     private Long dailyLow;
     private Long dailyHigh;
+    private BigDecimal priceNow;
 
 
 }
